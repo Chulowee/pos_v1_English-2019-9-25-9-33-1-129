@@ -1,137 +1,369 @@
 'use strict';
 
+// import { decode } from "punycode";
+
 describe('pos', () => {
-  it('should decode barcodes', () => {
-    const decodedBarcodes = {
-      bacode: 'ITEM000001'
-    };
+  it('should return decoded barcodes when decode barcodes given array of string tags', () => {
+    const tagsList = ['ITEM000001', 'ITEM000002-2'];
 
-    let expected = loadItems(decodedBarcodes);
-    expect(expected).toEqual([{"barcode": "ITEM000001", "count": 1}]);
+    const result = decodeBarcodes(tagsList);
+
+    const expected = [{
+        barcode: 'ITEM000001',
+        count: 1
+      },
+      {
+        barcode: 'ITEM000002',
+        count: 2
+      }
+    ];
+
+    expect(result).toEqual(expected);
   });
 
-  it('should load items with barcodes', () => {
-    const decodedBarcodes = {
-      bacode: 'ITEM000001'
-    };
+  it('should return items without count when load items given decoded barcodes', () => {
+    const decodedBarcodes = [{
+        barcode: 'ITEM000001',
+        count: 1
+      },
+      {
+        barcode: 'ITEM000002',
+        count: 2
+      }
+    ];
 
-    let expected = loadItems(decodedBarcodes);
-    expect(expected).toEqual([{"barcode": "ITEM000001", "name": "Diet Coke", "price": 3.00 , "unit": 'bottle'}]);
+    const result = loadItems(decodedBarcodes);
+
+    const expected = [{
+        barcode: 'ITEM000001',
+        name: 'Sprite',
+        price: 3.00,
+        unit: 'bottle'
+      },
+      {
+        barcode: 'ITEM000002',
+        name: 'Apple',
+        price: 5.50,
+        unit: 'pound'
+      }
+    ];
+
+    expect(result).toEqual(expected);
   });
 
-  it('should combine items', () => {
-    const decodedBarcodes = {
-      bacode: 'ITEM000001'
-    };
+  it('should return combined items when combine items given decoded barcodes', () => {
+    const decodedBarcodes = [{
+        barcode: 'ITEM000001',
+        count: 1
+      },
+      {
+        barcode: 'ITEM000002',
+        count: 2
+      }
+    ];
 
-    let expected = loadItems(decodedBarcodes);
-    expect(expected).toEqual([{"barcode": "ITEM000001", "name": "Diet Coke", "price": 3.00 , "unit": 'bottle', "count": 1}]);
+    const result = combineItems(decodedBarcodes);
+
+    const expected = [{
+        barcode: 'ITEM000001',
+        name: 'Sprite',
+        price: 3.00,
+        unit: 'bottle',
+        count: 1
+      },
+      {
+        barcode: 'ITEM000002',
+        name: 'Apple',
+        price: 5.50,
+        unit: 'pound',
+        count: 2
+      }
+    ];
+
+    expect(result).toEqual(expected);
   });
 
-  it('should decode tags', () => {
-    const decodedBarcodes = {
-      bacode: 'ITEM000001'
-    };
+  it('should return list of items when decode tags given array of string tags', () => {
+    const tagsList = [
+      'ITEM000001',
+      'ITEM000002-2'
+    ];
 
-    let expected = decodeTags(decodedBarcodes);
-    expect(expected).toEqual([{"barcode": "ITEM000001", "name": "Diet Coke", "price": 3.00 , "unit": 'bottle', "count": 1}]);
+    const result = decodeTags(tagsList);
+
+    const expected = [{
+        barcode: 'ITEM000001',
+        name: 'Sprite',
+        price: 3.00,
+        unit: 'bottle',
+        count: 1
+      },
+      {
+        barcode: 'ITEM000002',
+        name: 'Apple',
+        price: 5.50,
+        unit: 'pound',
+        count: 2
+      }
+    ];
+
+    expect(result).toEqual(expected);
   });
 
-  
-  it('should promote receipt tags', () => {
+  it('should return receipt items when promote receipt items given list of items', () => {
     const items = [{
-      "barcode": "ITEM000001",
-      "name": "Diet Coke",
-      "price": 3.00 ,
-      "unit": 'bottle',
-      "count": 1},
-      {"barcode": "ITEM000001",
-        "name": "Diet Coke",
-        "price": 3.00 ,
-        "unit": 'bottle',
-        "count": 1},
-      {"barcode": "ITEM000001",
-        "name": "Diet Coke",
-        "price": 3.00 ,
-        "unit": 'bottle',
-        "count": 1}];
+        barcode: 'ITEM000001',
+        name: 'Sprite',
+        price: 3.00,
+        unit: 'bottle',
+        count: 3,
+        subtotal: 9.00
+      },
+      {
+        barcode: 'ITEM000002',
+        name: 'Apple',
+        price: 5.50,
+        unit: 'pound',
+        count: 2,
+        subtotal: 11.00
+      }
+    ];
 
-      const promotions = ['ITEM000001'];
+    const result = promoteReceiptItems(items);
 
-    let expected = promotedReceiptItems(items,promotions);
-    expect(expected).toEqual([
-      {"barcode": "ITEM000001",
-      "name": "Diet Coke",
-      "price": 3.00 ,
-      "unit": 'bottle',
-      "count": 1,
-      "Subtotal": 6.00+"(yuan)"}]);
+    const expected = [{
+        barcode: 'ITEM000001',
+        name: 'Sprite',
+        price: 3.00,
+        unit: 'bottle',
+        count: 3,
+        subtotal: 6.0
+      },
+      {
+        barcode: 'ITEM000002',
+        name: 'Apple',
+        price: 5.50,
+        unit: 'pound',
+        count: 2,
+        subtotal: 11.00
+      }
+    ];
+
+    expect(result).toEqual(expected);
   });
 
-  it('should calculate receipt items', () => {
+  it('should return receipt items when calculate receipt items given list of items', () => {
     const items = [{
-      "barcode": "ITEM000001",
-      "name": "Diet Coke",
-      "price": 3.00 ,
-      "unit": 'bottle',
-      "count": 1},
-      {"barcode": "ITEM000001",
-        "name": "Diet Coke",
-        "price": 3.00 ,
-        "unit": 'bottle',
-        "count": 1},
-      {"barcode": "ITEM000001",
-        "name": "Diet Coke",
-        "price": 3.00 ,
-        "unit": 'bottle',
-        "count": 1}];
+        barcode: 'ITEM000001',
+        name: 'Sprite',
+        price: 3.00,
+        unit: 'bottle',
+        count: 2
+      },
+      {
+        barcode: 'ITEM000002',
+        name: 'Apple',
+        price: 5.50,
+        unit: 'pound',
+        count: 2
+      }
+    ];
 
-    let expected = calculateReceiptItems(items);
-    expect(expected).toEqual([
-    {"barcode": "ITEM000001",
-    "name": "Diet Coke",
-    "price": 3.00 ,
-    "unit": 'bottle',
-    "count": 3,
-    "Subtotal": 6.00+"(yuan)"}]);
+    const result = calculateReceiptItems(items);
+
+    const expected = [{
+        barcode: 'ITEM000001',
+        name: 'Sprite',
+        price: 3.00,
+        unit: 'bottle',
+        count: 2,
+        subtotal: 6.00
+      },
+      {
+        barcode: 'ITEM000002',
+        name: 'Apple',
+        price: 5.50,
+        unit: 'pound',
+        count: 2,
+        subtotal: 11.00
+      }
+    ];
+
+    expect(result).toEqual(expected);
   });
 
-  it('should calculate receipt total', () => {
-    const receipItems = [
-      {"barcode": "ITEM000001",
-      "name": "Diet Coke",
-      "price": 3.00 ,
-      "unit": 'bottle',
-      "count": 3,
-      "Subtotal": 6.00+"(yuan)"}];
+  it('should return receipt items with total when calculate total given receipt items', () => {
+    const receiptItems = [{
+        barcode: 'ITEM000001',
+        name: 'Sprite',
+        price: 3.00,
+        unit: 'bottle',
+        count: 2,
+        subtotal: 6.00
+      },
+      {
+        barcode: 'ITEM000002',
+        name: 'Apple',
+        price: 5.50,
+        unit: 'pound',
+        count: 2,
+        subtotal: 11.00
+      }
+    ];
 
-    let expected = calculateReceiptTotal(receipItems);
-    expect(expected).toEqual({"Total":6.00+"(yuan)"});
-  });
-  
-  it('should calculate receipt savings', () => {
-    const receipItems = [
-      {"barcode": "ITEM000001",
-      "name": "Diet Coke",
-      "price": 3.00 ,
-      "unit": 'bottle',
-      "count": 3,
-      "Subtotal": 6.00+"(yuan)"}];
+    const result = calculateReceiptTotal(receiptItems);
 
-    let expected = calculateReceiptSavings(receipItems);
-    expect(expected).toEqual({"Savings":3.00+"(yuan)"});
+    const expected = {
+      receiptItems: [{
+          barcode: 'ITEM000001',
+          name: 'Sprite',
+          price: 3.00,
+          unit: 'bottle',
+          count: 2,
+          subtotal: 6.00
+        },
+        {
+          barcode: 'ITEM000002',
+          name: 'Apple',
+          price: 5.50,
+          unit: 'pound',
+          count: 2,
+          subtotal: 11.00
+        }
+      ],
+      total: 17.00
+    };
+
+    expect(result).toEqual(expected);
   });
-    
-  it('should render receipt', () => {
-    const receipt = "Name：Coca-Cola，Quantity：3 bottles，Unit：3.00(yuan)，Subtotal：6.00(yuan)";
-      receipt
-    let expected = calculateReceiptSavings(receipItems);
-    expect(expected).toEqual("***<store earning no money>Receipt ***"+
-    "Name：Coca-Cola，Quantity：3 bottles，Unit：3.00(yuan)，Subtotal：6.00(yuan)"+
-    "----------------------"+
-    "Total：6(yuan)"+
-    "Discounted prices：3(yuan)"+
-    "**********************`");
+
+  it('should return receipt items with savings when calculate savings given receipt items', () => {
+    const receipt = {
+      receiptItems: [{
+          barcode: 'ITEM000001',
+          name: 'Sprite',
+          price: 3.00,
+          unit: 'bottle',
+          count: 3,
+          subtotal: 6.00
+        },
+        {
+          barcode: 'ITEM000002',
+          name: 'Apple',
+          price: 5.50,
+          unit: 'pound',
+          count: 2,
+          subtotal: 11.00
+        }
+      ],
+      total: 17.00
+    };
+
+    const result = calculateReceiptSavings(receipt);
+
+    const expected = {
+      receiptItems: [{
+          barcode: 'ITEM000001',
+          name: 'Sprite',
+          price: 3.00,
+          unit: 'bottle',
+          count: 3,
+          subtotal: 6.00
+        },
+        {
+          barcode: 'ITEM000002',
+          name: 'Apple',
+          price: 5.50,
+          unit: 'pound',
+          count: 2,
+          subtotal: 11.00
+        }
+      ],
+      total: 17.00,
+      savings: 3.00
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  it('should return receipt when calculate receipt given list of items', () => {
+    const items = [{
+        barcode: 'ITEM000001',
+        name: 'Sprite',
+        price: 3.00,
+        unit: 'bottle',
+        count: 3
+      },
+      {
+        barcode: 'ITEM000002',
+        name: 'Apple',
+        price: 5.50,
+        unit: 'pound',
+        count: 2
+      }
+    ];
+
+    const result = calculateReceipt(items);
+
+    const expected = {
+      receiptItems: [{
+          barcode: 'ITEM000001',
+          name: 'Sprite',
+          price: 3.00,
+          unit: 'bottle',
+          count: 3,
+          subtotal: 6.00
+        },
+        {
+          barcode: 'ITEM000002',
+          name: 'Apple',
+          price: 5.50,
+          unit: 'pound',
+          count: 2,
+          subtotal: 11.00
+        }
+      ],
+      total: 17.00,
+      savings: 3.00
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  it('should return formatted receipt when render receipt given receipt', () => {
+    const receipt = {
+      receiptItems: [{
+          barcode: 'ITEM000001',
+          name: 'Sprite',
+          price: 3.00,
+          unit: 'bottle',
+          count: 3,
+          subtotal: 6.00
+        },
+        {
+          barcode: 'ITEM000002',
+          name: 'Apple',
+          price: 5.50,
+          unit: 'pound',
+          count: 2,
+          subtotal: 11.00
+        }
+      ],
+      total: 17.00,
+      savings: 3.00
+    };
+
+    const result = renderReceipt(receipt);
+
+    const expected = '***<store earning no money>Receipt ***\n' +
+      'Name: Sprite, Quantity: 3 bottles, Unit: 3.00(yuan), Subtotal: 6.00(yuan)\n' +
+      'Name: Apple, Quantity: 2 pounds, Unit: 5.50(yuan), Subtotal: 11.00(yuan)\n' +
+      '----------------------\n' +
+      'Total: 17.00(yuan)\n' +
+      'Discounted prices: 3.00(yuan)\n' +
+      '**********************';
+
+    expect(result).toEqual(expected);
   });
 
   it('should print text', () => {
@@ -151,15 +383,15 @@ describe('pos', () => {
 
     printReceipt(tags);
 
-    const expectText = `***<store earning no money>Receipt ***
-Name：Sprite，Quantity：5 bottles，Unit：3.00(yuan)，Subtotal：12.00(yuan)
-Name：Litchi，Quantity：2.5 pounds，Unit：15.00(yuan)，Subtotal：37.50(yuan)
-Name：Instant Noodles，Quantity：3 bags，Unit：4.50(yuan)，Subtotal：9.00(yuan)
-----------------------
-Total：58.50(yuan)
-Discounted prices：7.50(yuan)
-**********************`;
+    const expected = '***<store earning no money>Receipt ***\n' +
+      'Name: Sprite, Quantity: 5 bottles, Unit: 3.00(yuan), Subtotal: 12.00(yuan)\n' +
+      'Name: Litchi, Quantity: 2.5 pounds, Unit: 15.00(yuan), Subtotal: 37.50(yuan)\n' +
+      'Name: Instant Noodles, Quantity: 3 bags, Unit: 4.50(yuan), Subtotal: 9.00(yuan)\n' +
+      '----------------------\n' +
+      'Total: 58.50(yuan)\n' +
+      'Discounted prices: 7.50(yuan)\n' +
+      '**********************';
 
-    expect(console.log).toHaveBeenCalledWith(expectText);
-  });
+    expect(console.log).toHaveBeenCalledWith(expected);
+});
 });
